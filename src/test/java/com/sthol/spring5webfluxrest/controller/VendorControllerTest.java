@@ -11,6 +11,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 
 class VendorControllerTest {
     public static final String API_V_01_VENDORS = "/api/v01/vendors";
@@ -74,6 +75,38 @@ class VendorControllerTest {
                 .willReturn(Mono.just(vendor1));
 
         webTestClient.put().uri(API_V_01_VENDORS + "/someid")
+                .body(Mono.just(vendor1), Vendor.class)
+                .exchange()
+                .expectStatus()
+                .isOk();
+    }
+
+    @Test
+    void testPatchVendorWithChanges() {
+        BDDMockito.given(vendorRepository.findById(anyString()))
+                .willReturn(Mono.just(vendor2));
+
+        BDDMockito.given(vendorRepository.save(any(Vendor.class)))
+                .willReturn(Mono.just(vendor1));
+
+        webTestClient.patch().uri(API_V_01_VENDORS + "/someid")
+                .body(Mono.just(vendor1), Vendor.class)
+                .exchange()
+                .expectStatus()
+                .isOk();
+
+        BDDMockito.verify(vendorRepository).save(any());
+    }
+
+    @Test
+    void testPatchVendorWithNoChanges() {
+        BDDMockito.given(vendorRepository.findById(anyString()))
+                .willReturn(Mono.just(vendor1));
+
+        BDDMockito.given(vendorRepository.save(any(Vendor.class)))
+                .willReturn(Mono.just(vendor1));
+
+        webTestClient.patch().uri(API_V_01_VENDORS + "/someid")
                 .body(Mono.just(vendor1), Vendor.class)
                 .exchange()
                 .expectStatus()
