@@ -6,10 +6,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
+import org.reactivestreams.Publisher;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.junit.jupiter.api.Assertions.*;
 
 
@@ -56,5 +58,32 @@ class CategoryControllerTest {
         webTestClient.get().uri(API_V_01_CATEGORIES + "/someId")
                 .exchange()
                 .expectBody(Category.class);
+    }
+
+    @Test
+    void testCreateCategory() {
+       BDDMockito.given(categoryRepository.saveAll(any(Publisher.class)))
+               .willReturn(Flux.just(category1));
+
+       Mono<Category> customerMono = Mono.just(category1);
+       webTestClient.post().uri(API_V_01_CATEGORIES)
+               .body(customerMono, Category.class)
+               .exchange()
+               .expectStatus()
+               .isCreated();
+    }
+
+    @Test
+    void testUpdate() {
+        BDDMockito.given(categoryRepository.save(any(Category.class)))
+                .willReturn(Mono.just(category1));
+
+        Mono<Category> updateMono = Mono.just(category1);
+
+        webTestClient.put().uri(API_V_01_CATEGORIES+"/abcdefg")
+                .body(updateMono,Category.class)
+                .exchange()
+                .expectStatus()
+                .isOk();
     }
 }
