@@ -6,11 +6,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
+import org.reactivestreams.Publisher;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 
 class VendorControllerTest {
     public static final String API_V_01_VENDORS = "/api/v01/vendors";
@@ -54,5 +54,29 @@ class VendorControllerTest {
         webTestClient.get().uri(API_V_01_VENDORS + "/someid")
                 .exchange()
                 .expectBody(Vendor.class);
+    }
+
+    @Test
+    void testCreateVendor() {
+        BDDMockito.given(vendorRepository.saveAll(any(Publisher.class)))
+                .willReturn(Flux.just(vendor1));
+
+        webTestClient.post().uri(API_V_01_VENDORS)
+                .body(Mono.just(vendor1), Vendor.class)
+                .exchange()
+                .expectStatus()
+                .isCreated();
+    }
+
+    @Test
+    void testUpdateVendor() {
+        BDDMockito.given(vendorRepository.save(any(Vendor.class)))
+                .willReturn(Mono.just(vendor1));
+
+        webTestClient.put().uri(API_V_01_VENDORS + "/someid")
+                .body(Mono.just(vendor1), Vendor.class)
+                .exchange()
+                .expectStatus()
+                .isOk();
     }
 }
